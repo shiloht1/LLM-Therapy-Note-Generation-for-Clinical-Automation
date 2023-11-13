@@ -1,0 +1,45 @@
+import openai
+from docx import Document
+
+openai.api_key = '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'
+
+# Step 3: Transcribe the audio
+file_path = r"C:\Users\shilo\Downloads\Case Study.mp3"
+audio_file = open(file_path, "rb")
+transcript = openai.Audio.transcribe("whisper-1", audio_file)
+transcribed_text = transcript["text"]
+
+def chunk_transcript(transcript, chunk_size=3500):
+    """Breaks the transcript into smaller chunks."""
+    words = transcript.split()
+    chunks = []
+    current_chunk = []
+
+    for word in words:
+        if len(" ".join(current_chunk)) + len(word) > chunk_size:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = []
+        current_chunk.append(word)
+   
+    chunks.append(" ".join(current_chunk))
+    return chunks
+
+chunks = chunk_transcript(transcribed_text)
+
+# Step 4: Generate a DORA-approved note for each chunk
+def generate_note(data):
+    messages = [
+        {"role": "user", "content": f"Generate a DORA approved note for a therapy session based on the following transcript: {data}"}
+    ]
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+    return response.choices[0].message['content']
+
+
+notes = [generate_note(chunk) for chunk in chunks]
+full_note = "\n\n".join(notes)
+
+# Step 5: Save the full note to a Word document
+doc = Document()
+doc.add_heading('Therapy Session Note', 0)
+doc.add_paragraph(full_note)
+doc.save('therapy_session_note.docx')
