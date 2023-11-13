@@ -1,7 +1,7 @@
 import openai
 from docx import Document
 
-openai.api_key = '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'
+openai.api_key = '................'
 
 # Step 3: Transcribe the audio
 file_path = r"C:\Users\shilo\Downloads\Case Study.mp3"
